@@ -1,12 +1,24 @@
 import gym
+import sys
+import numpy as np
 
-env = gym.make('Breakout-v0', render_mode='human')
-env.reset()
+np.set_printoptions(threshold=sys.maxsize)
 
-for i in range(1):
-    action = env.action_space.sample()
-    obs, reward, done, info = env.step(action)
-    print("this is obs: ",obs)
-    print("this is reward: ", reward)
-    print("this is done: ", done)
-    print("this is info: ", info)
+
+class GymEnv:
+    def __init__(self, render_mode: str = "human"):
+        self.env = gym.make('Breakout-v0', render_mode=render_mode)
+        self.env.reset()
+
+    def test(self):
+        for i in range(1000):
+            action = self.env.action_space.sample()
+            obs, reward, done, info = self.env.step(action)
+            print("action is ", action, "episode is: ", i, done)
+            if done:
+                break
+
+
+if __name__ == '__main__':
+    e = GymEnv()
+    e.test()
