@@ -69,10 +69,10 @@ class DQN(nn.Module):
 
 
 class DQN_Q(nn.Module):
-    def __init__(self, n_layers=5, w_input=False, w_output=False, data_reupload:bool=True):
+    def __init__(self, a_size=3,n_layers=5, w_input=False, w_output=False, data_reupload:bool=True):
         super(DQN_Q, self).__init__()
-        self.n_qubits = 4
-        self.n_actions = 4
+        self.n_qubits = 3
+        self.n_actions = a_size
         self.data_reupload = data_reupload
         self.q_layers = self.get_model(n_layers=n_layers,data_reupload=data_reupload)
         if w_input:
