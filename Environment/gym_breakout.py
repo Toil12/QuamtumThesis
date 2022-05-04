@@ -16,9 +16,13 @@ class GymEnv:
         for i in range(1000):
             action = self.env.action_space.sample()
             obs, reward, done, info = self.env.step(action)
-            print("action is ", action, "episode is: ", i, done)
+            print("action is ", action, "episode is: ", i, done,info['lives'])
             if done:
                 break
+
+    def image_info(self)->None:
+        pass
+
 
 
 if __name__ == '__main__':

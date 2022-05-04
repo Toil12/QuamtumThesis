@@ -1,7 +1,6 @@
 import sys
 import gym
 import torch
-import pylab
 import random
 import numpy as np
 from collections import deque
@@ -16,8 +15,9 @@ from torch.autograd import Variable
 import pennylane as qml
 import time
 from torch.nn.parameter import Parameter
+import matplotlib.pyplot as plt
 
-
+torch.cuda.empty_cache()
 def find_max_lifes(env):
     env.reset()
     _, _, _, info = env.step(0)
@@ -110,13 +110,15 @@ class DQN_Q(nn.Module):
             qml.CZ(wires=[wire, (wire + 1) % self.n_qubits])
 
     def measure(self):
-        return [
-            qml.expval(qml.PauliZ(0) @ qml.PauliZ(1)),
-            qml.expval(qml.PauliZ(2) @ qml.PauliZ(3))
-        ]
+        # return [
+        #     qml.expval(qml.PauliZ(0) @ qml.PauliZ(1)),
+        #     qml.expval(qml.PauliZ(2) @ qml.PauliZ(3))
+        # ]
+
+        return [qml.expval(qml.PauliZ(wire)) for wire in range(self.n_qubits)]
 
     def get_model(self,n_layers, data_reupload):
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = qml.device("default.qubit.tf", wires=self.n_qubits)
         shapes = {
             "y_weights": (n_layers, self.n_qubits),
             "z_weights": (n_layers, self.n_qubits)
@@ -127,8 +129,8 @@ class DQN_Q(nn.Module):
             for layer_idx in range(n_layers):
                 if (layer_idx == 0) or data_reupload:
                     self.encode(inputs)
-                self.layer(self.n_qubits, y_weights[layer_idx], z_weights[layer_idx])
-            return self.measure(self.n_qubits)
+                self.layer(y_weights[layer_idx], z_weights[layer_idx])
+            return self.measure()
 
         model = qml.qnn.TorchLayer(circuit, shapes)
 
@@ -282,12 +284,16 @@ class DQNAgent():
 
 
 if __name__ == "__main__":
+    train_device=str(sys.argv[1])
+    quantum_model=bool(sys.argv[2])
+
     EPISODES = 500000
     HEIGHT = 84
     WIDTH = 84
     HISTORY_SIZE = 4
 
     env = gym.make('Breakout-v0', render_mode='human')
+    # get the game max lifes
     max_life = find_max_lifes(env)
     state_size = env.observation_space.shape
     # action_size = env.action_space.n
@@ -321,6 +327,7 @@ if __name__ == "__main__":
 
             next_state, reward, done, info = env.step(action + 1)
 
+            #
             pre_proc_next_state = pre_proc(next_state)
             history[4, :, :] = pre_proc_next_state
             ter = check_live(life, info['lives'])
@@ -330,21 +337,24 @@ if __name__ == "__main__":
 
             # save the sample <s, a, r, s'> to the replay memory
             agent.append_sample(deepcopy(pre_proc_next_state), action, r, ter)
-            # every time step do the training
+            # every time step do the training and train until have enough samples
             if frame >= agent.train_start:
+                print("start one train at frame ",frame)
                 agent.train_model(frame)
                 if frame % agent.update_target == 0:
                     agent.update_target_model()
             score += reward
+            # shift one step at tail
             history[:4, :, :] = history[1:, :, :]
             time_end=time.time()
-            if frame % 50000 == 0:
+            if frame % 500 == 0:
                 print('now time : ', datetime.now())
                 scores.append(score)
-                episodes.append(e)
-                pylab.plot(episodes, scores, 'b')
-                pylab.savefig("../Graphs/breakout_dqn.png")
-
+                episodes.append(int(e))
+                # print(episodes,scores)
+                plt.plot(episodes,scores)
+                plt.savefig("../Graphs/breakout_dqn_q.png")
+                plt.clf()
 
             if done:
                 recent_reward.append(score)
