@@ -1,18 +1,17 @@
 import pennylane as qml
-import torch
 
-dev = qml.device('default.qubit', wires=2)
+dev = qml.device("default.qubit", wires=1, shots=10)
 
-@qml.qnode(dev, interface='torch')
-def circuit(phi, theta):
-    qml.RX(phi[0], wires=0)
-    qml.RY(phi[1], wires=1)
-    qml.CNOT(wires=[0, 1])
-    qml.PhaseShift(theta, wires=0)
-    return qml.expval(qml.PauliZ(0)), qml.expval(qml.Hadamard(1))
+@qml.qnode(dev)
+def circuit(x, y):
+    qml.RX(x, wires=0)
+    qml.RY(y, wires=0)
+    return qml.expval(qml.PauliZ(0))
 
-phi = torch.tensor([0.5, 0.1])
-theta = torch.tensor(0.2)
+# execute the QNode using 10 shots
+result = circuit(0.54, 0.1)
 
-for i in range(3):
-    print(circuit(phi, theta))
+
+# execute the QNode again, now using 1 shot
+result = circuit(0.54, 0.1, shots=1)
+print(result)

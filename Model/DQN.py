@@ -69,10 +69,10 @@ class DQN(nn.Module):
 
 
 class DQN_Q(nn.Module):
-    def __init__(self, n_layers=5, w_input=False, w_output=False, data_reupload:bool=True):
+    def __init__(self, a_size=3,n_layers=5, w_input=False, w_output=False, data_reupload:bool=True):
         super(DQN_Q, self).__init__()
         self.n_qubits = 4
-        self.n_actions = 4
+        self.n_actions = a_size
         self.data_reupload = data_reupload
         self.q_layers = self.get_model(n_layers=n_layers,data_reupload=data_reupload)
         if w_input:
@@ -99,9 +99,10 @@ class DQN_Q(nn.Module):
         return outputs
     def encode(self, inputs):
         for wire in range(self.n_qubits):
-            qml.RX(inputs[wire], wires=wire)
+            qml.RZ(inputs[wire], wires=wire)
 
     def layer(self, y_weight, z_weight):
+
         for wire, y_weight in enumerate(y_weight):
             qml.RY(y_weight, wires=wire)
         for wire, z_weight in enumerate(z_weight):
@@ -130,6 +131,8 @@ class DQN_Q(nn.Module):
                 if (layer_idx == 0) or data_reupload:
                     self.encode(inputs)
                 self.layer(y_weights[layer_idx], z_weights[layer_idx])
+
+            print("check")
             return self.measure()
 
         model = qml.qnn.TorchLayer(circuit, shapes)
@@ -140,7 +143,7 @@ class DQN_Q(nn.Module):
 # it uses Neural Network to approximate q function
 # and replay memory & target q network
 class DQNAgent():
-    def __init__(self, action_size):
+    def __init__(self, action_size:int,strategy:str):
         # if you want to see Cartpole learning, then change to True
         self.render = False
         self.load_model = False
@@ -157,19 +160,23 @@ class DQNAgent():
         self.explore_step = 1000000
         self.epsilon_decay = (self.epsilon - self.epsilon_min) / self.explore_step
         self.batch_size = 32
-        self.train_start = 100000
+        self.train_start = 100
         self.update_target = 1000
 
         # create replay memory using deque
         self.memory = deque(maxlen=self.memory_size)
 
         # create main model and target model
-        # self.model = DQN(action_size)
-        self.model = DQN_Q(action_size)
+
+        if strategy=="c":
+            self.model = DQN(action_size)
+            self.target_model = DQN(action_size)
+        elif strategy=="q":
+            self.model = DQN_Q(action_size)
+            self.target_model = DQN_Q(action_size)
+
         self.model.cuda()
         self.model.apply(self.weights_init)
-        # self.target_model = DQN(action_size)
-        self.target_model = DQN_Q(action_size)
         self.target_model.cuda()
 
         # self.optimizer = optim.RMSprop(params=self.model.parameters(),lr=self.learning_rate, eps=0.01, momentum=0.95)
@@ -196,6 +203,7 @@ class DQNAgent():
         self.target_model.load_state_dict(self.model.state_dict())
 
     #  get action from model using epsilon-greedy policy
+    #  action include 3,not move, to left or right, 1,2,3 in sample space
     def get_action(self, state):
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
@@ -284,9 +292,6 @@ class DQNAgent():
 
 
 if __name__ == "__main__":
-    train_device=str(sys.argv[1])
-    quantum_model=bool(sys.argv[2])
-
     EPISODES = 500000
     HEIGHT = 84
     WIDTH = 84
@@ -299,7 +304,7 @@ if __name__ == "__main__":
     # action_size = env.action_space.n
     action_size = 3
     scores, episodes = [], []
-    agent = DQNAgent(action_size)
+    agent = DQNAgent(action_size,"c")
     recent_reward = deque(maxlen=100)
     frame = 0
     memory_size = 0

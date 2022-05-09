@@ -1,11 +1,12 @@
 import gym
 import sys
 import numpy as np
+import time
 np.set_printoptions(threshold=sys.maxsize)
 
 class GymEnv:
     def __init__(self, render_mode: str = "human"):
-        self.env = gym.make('Breakout-v0', render_mode=render_mode)
+        self.env = gym.make("Breakout-v0", render_mode=render_mode)
         self.env.reset()
 
     def test(self) -> None:
@@ -27,4 +28,9 @@ class GymEnv:
 
 if __name__ == '__main__':
     e = GymEnv()
-    print(e.env.action_space)
+
+    for i in range(10):
+        # e.env.render()
+
+        e.env.step(3)
+        time.sleep(2)
