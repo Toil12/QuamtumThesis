@@ -71,7 +71,7 @@ class DQN(nn.Module):
 class DQN_Q(nn.Module):
     def __init__(self, a_size=3,n_layers=5, w_input=False, w_output=False, data_reupload:bool=True):
         super(DQN_Q, self).__init__()
-        self.n_qubits = 4
+        self.n_qubits = 3
         self.n_actions = a_size
         self.data_reupload = data_reupload
         self.q_layers = self.get_model(n_layers=n_layers,data_reupload=data_reupload)
@@ -99,10 +99,9 @@ class DQN_Q(nn.Module):
         return outputs
     def encode(self, inputs):
         for wire in range(self.n_qubits):
-            qml.RZ(inputs[wire], wires=wire)
+            qml.RX(inputs[wire], wires=wire)
 
     def layer(self, y_weight, z_weight):
-
         for wire, y_weight in enumerate(y_weight):
             qml.RY(y_weight, wires=wire)
         for wire, z_weight in enumerate(z_weight):
@@ -131,8 +130,6 @@ class DQN_Q(nn.Module):
                 if (layer_idx == 0) or data_reupload:
                     self.encode(inputs)
                 self.layer(y_weights[layer_idx], z_weights[layer_idx])
-
-            print("check")
             return self.measure()
 
         model = qml.qnn.TorchLayer(circuit, shapes)
