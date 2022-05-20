@@ -1,5 +1,20 @@
+from DQN_Classical import DQN
+from DQN_Q import *
+from torch import nn
+import random
+import torch
+import numpy as np
+from collections import deque
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.autograd import Variable
+from Train.read_write_operations import *
+from pytorch_model_summary import summary
+
+# it uses Neural Network to approximate q function
+# and replay memory & target q network
 class DQNAgent():
-    def __init__(self, action_size:int,strategy:str):
+    def __init__(self, action_size:int,strategy:str='c'):
         # if you want to see Cartpole learning, then change to True
         self.render = False
         self.load_model = False
@@ -7,17 +22,21 @@ class DQNAgent():
         # get size of action
         self.action_size = action_size
 
+        # read parameters from json file
+        parameters=read_parameters()
+
         # These are hyper parameters for the DQN
-        self.discount_factor = 0.99
-        self.learning_rate = 0.0001
-        self.memory_size = 1000000
-        self.epsilon = 1.0
-        self.epsilon_min = 0.02
-        self.explore_step = 1000000
+        self.history_size=4
+        self.discount_factor = parameters['discount_factor']
+        self.learning_rate = parameters['learning_rate']
+        self.memory_size = parameters['memory_size']
+        self.epsilon = parameters['epsilon']
+        self.epsilon_min = parameters['epsilon_min']
+        self.explore_step = parameters['explore_step']
         self.epsilon_decay = (self.epsilon - self.epsilon_min) / self.explore_step
-        self.batch_size = 32
-        self.train_start = 100
-        self.update_target = 1000
+        self.batch_size = parameters['batch_size']
+        self.train_start = parameters['train_start']
+        self.update_target = parameters['update_target']
 
         # create replay memory using deque
         self.memory = deque(maxlen=self.memory_size)
@@ -28,8 +47,8 @@ class DQNAgent():
             self.model = DQN(action_size)
             self.target_model = DQN(action_size)
         elif strategy=="q":
-            self.model = DQN_Q(action_size)
-            self.target_model = DQN_Q(action_size)
+            self.model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
+            self.target_model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
 
         self.model.cuda()
         self.model.apply(self.weights_init)
@@ -61,11 +80,14 @@ class DQNAgent():
     #  get action from model using epsilon-greedy policy
     #  action include 3,not move, to left or right, 1,2,3 in sample space
     def get_action(self, state):
+
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
         else:
+
             state = torch.from_numpy(state).unsqueeze(0)
             state = Variable(state).float().cuda()
+
             action = self.model(state).data.cpu().max(1)[1]
             return int(action)
 
@@ -81,12 +103,12 @@ class DQNAgent():
             sample_range = frame
 
         # history size
-        sample_range -= (HISTORY_SIZE + 1)
+        sample_range -= (self.history_size + 1)
 
         idx_sample = random.sample(range(sample_range), self.batch_size)
         for i in idx_sample:
             sample = []
-            for j in range(HISTORY_SIZE + 1):
+            for j in range(self.history_size + 1):
                 sample.append(self.memory[i + j])
 
             sample = np.array(sample)

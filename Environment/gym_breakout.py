@@ -29,8 +29,4 @@ class GymEnv:
 if __name__ == '__main__':
     e = GymEnv()
 
-    for i in range(10):
-        # e.env.render()
-
-        e.env.step(3)
-        time.sleep(2)
+    print(e.env.reset()[21:])
