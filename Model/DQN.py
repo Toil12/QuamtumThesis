@@ -95,7 +95,7 @@ if __name__ == "__main__":
             if frame >= agent.train_start:
                 print("start one train at frame ",frame)
                 agent.train_model(frame)
-                print("check")
+                # print("check")
                 if frame % agent.update_target == 0:
                     agent.update_target_model()
             score += reward

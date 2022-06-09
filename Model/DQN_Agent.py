@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from Train.read_write_operations import *
 from pytorch_model_summary import summary
+np.set_printoptions(threshold=np.inf)
 
 # it uses Neural Network to approximate q function
 # and replay memory & target q network
@@ -68,10 +69,10 @@ class DQNAgent():
         classname = m.__class__.__name__
         if classname.find('Linear') != -1:
             torch.nn.init.xavier_uniform(m.weight)
-            print(m)
+            # print(m)
         elif classname.find('Conv') != -1:
             torch.nn.init.xavier_uniform(m.weight)
-            print(m)
+            # print(m)
 
     # after some time interval update the target model to be same with model
     def update_target_model(self):
@@ -126,6 +127,9 @@ class DQNAgent():
 
         history = np.stack(mini_batch[0], axis=0)
         states = np.float32(history[:, :4, :, :]) / 255.
+        # print(mini_batch)
+        # 0,1,2,3:image,actions sequence,rewards,done
+
         actions = list(mini_batch[1])
         rewards = list(mini_batch[2])
         next_states = np.float32(history[:, 1:, :, :]) / 255.
@@ -137,6 +141,7 @@ class DQNAgent():
         # Q function of current state
         states = torch.Tensor(states)
         states = Variable(states).float().cuda()
+
         pred = self.model(states)
 
         # one-hot encoding
@@ -144,7 +149,9 @@ class DQNAgent():
 
         one_hot_action = torch.FloatTensor(self.batch_size, self.action_size).zero_()
         one_hot_action.scatter_(1, a, 1)
-
+        # quantum output problem
+        # print(one_hot_action.shape)
+        # print(pred.shape)
         pred = torch.sum(pred.mul(Variable(one_hot_action).cuda()), dim=1)
 
         # Q function of next state
@@ -163,6 +170,7 @@ class DQNAgent():
 
         # MSE Loss function
         loss = F.smooth_l1_loss(pred, target)
+        # print("loss check")
         loss.backward()
 
         # and train
