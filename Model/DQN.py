@@ -43,6 +43,7 @@ if __name__ == "__main__":
     # get the game max lifes
     max_life = find_max_lifes(env)
     state_size = env.observation_space.shape
+
     # action_size = env.action_space.n
     action_size = 3
     scores, episodes = [], []

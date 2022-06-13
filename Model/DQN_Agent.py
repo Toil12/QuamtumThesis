@@ -9,7 +9,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 from Train.read_write_operations import *
-from pytorch_model_summary import summary
 np.set_printoptions(threshold=np.inf)
 
 # it uses Neural Network to approximate q function
