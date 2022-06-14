@@ -39,7 +39,7 @@ if __name__ == "__main__":
     WIDTH = 84
     HISTORY_SIZE = 4
 
-    env = gym.make('Breakout-v0', render_mode='human')
+    env = gym.make('Breakout-v4', render_mode='human')
     # get the game max lifes
     max_life = find_max_lifes(env)
     state_size = env.observation_space.shape

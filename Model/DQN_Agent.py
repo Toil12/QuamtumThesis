@@ -50,9 +50,9 @@ class DQNAgent():
             self.model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
             self.target_model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
 
-        self.model.cuda()
+        self.model.cpu()
         self.model.apply(self.weights_init)
-        self.target_model.cuda()
+        self.target_model.cpu()
 
         # self.optimizer = optim.RMSprop(params=self.model.parameters(),lr=self.learning_rate, eps=0.01, momentum=0.95)
         self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)
@@ -86,7 +86,7 @@ class DQNAgent():
         else:
 
             state = torch.from_numpy(state).unsqueeze(0)
-            state = Variable(state).float().cuda()
+            state = Variable(state).float().cpu()
 
             action = self.model(state).data.cpu().max(1)[1]
             return int(action)
@@ -139,7 +139,7 @@ class DQNAgent():
 
         # Q function of current state
         states = torch.Tensor(states)
-        states = Variable(states).float().cuda()
+        states = Variable(states).float().cpu()
 
         pred = self.model(states)
 
@@ -151,11 +151,11 @@ class DQNAgent():
         # quantum output problem
         # print(one_hot_action.shape)
         # print(pred.shape)
-        pred = torch.sum(pred.mul(Variable(one_hot_action).cuda()), dim=1)
+        pred = torch.sum(pred.mul(Variable(one_hot_action).cpu()), dim=1)
 
         # Q function of next state
         next_states = torch.Tensor(next_states)
-        next_states = Variable(next_states).float().cuda()
+        next_states = Variable(next_states).float().cpu()
         next_pred = self.target_model(next_states).data.cpu()
 
         rewards = torch.FloatTensor(rewards)
@@ -163,7 +163,7 @@ class DQNAgent():
 
         # Q Learning: get maximum Q value at s' from target model
         target = rewards + (1 - dones) * self.discount_factor * next_pred.max(1)[0]
-        target = Variable(target).cuda()
+        target = Variable(target).cpu()
 
         self.optimizer.zero_grad()
 

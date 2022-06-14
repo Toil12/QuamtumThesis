@@ -6,7 +6,7 @@ np.set_printoptions(threshold=sys.maxsize)
 
 class GymEnv:
     def __init__(self, render_mode: str = "human"):
-        self.env = gym.make("Breakout-v0", render_mode=render_mode)
+        self.env = gym.make("Breakout-v4", render_mode=render_mode)
         self.env.reset()
 
     def test(self) -> None:
@@ -29,4 +29,4 @@ class GymEnv:
 if __name__ == '__main__':
     e = GymEnv()
 
-    print(e.env.reset()[21:])
+    print(e.test())
