@@ -1,5 +1,3 @@
-from PIL import Image
-from torchvision import models
 import sys
 import gym
 import torch
