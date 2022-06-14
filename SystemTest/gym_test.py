@@ -1,7 +1,12 @@
 import gym
-env = gym.make('SpaceInvaders-v0')
-env.reset()
+env = gym.make("CartPole-v1")
+observation, info = env.reset(seed=42, return_info=True)
+
 for _ in range(1000):
-    env.step(env.action_space.sample())
-    env.render('human')
-env.close()  # https://github.com/openai/gym/issues/893
+    action = env.action_space.sample()
+    observation, reward, done, info = env.step(action)
+    print(observation)
+
+    if done:
+        observation, info = env.reset(return_info=True)
+env.close()

@@ -38,8 +38,12 @@ if __name__ == "__main__":
     HEIGHT = 84
     WIDTH = 84
     HISTORY_SIZE = 4
-
-    env = gym.make('Breakout-v4', render_mode='human')
+    # render_mode='humam'
+    render_mode=None
+    if render_mode != None:
+        env = gym.make('Breakout-v4', render_mode=render_mode)
+    else:
+        env = gym.make('Breakout-v4')
     # get the game max lifes
     max_life = find_max_lifes(env)
     state_size = env.observation_space.shape

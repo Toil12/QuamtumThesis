@@ -5,8 +5,13 @@ import time
 np.set_printoptions(threshold=sys.maxsize)
 
 class GymEnv:
-    def __init__(self, render_mode: str = "human"):
-        self.env = gym.make("Breakout-v4", render_mode=render_mode)
+    def __init__(self, render_mode: str = None):
+        if render_mode!=None:
+
+            self.env = gym.make("Breakout-v4", render_mode=render_mode)
+        else:
+            self.env = gym.make("Breakout-v4")
+
         self.env.reset()
 
     def test(self) -> None:
