@@ -7,7 +7,7 @@ from datetime import datetime
 from copy import deepcopy
 from skimage.transform import resize
 from skimage.color import rgb2gray
-from DQN_Agent import DQNAgent
+from Model.DQN_Agent import DQNAgent
 import time
 import matplotlib.pyplot as plt
 
@@ -105,13 +105,13 @@ if __name__ == "__main__":
             # shift one step at tail
             history[:4, :, :] = history[1:, :, :]
             time_end=time.time()
-            if frame % 500 == 0:
+            if frame % 100 == 0:
                 print('now time : ', datetime.now())
                 scores.append(score)
                 episodes.append(int(e))
                 # print(episodes,scores)
                 plt.plot(episodes,scores)
-                plt.savefig("../Graphs/breakout_dqn_q.png")
+                plt.savefig("Graphs/breakout_dqn_q.png")
                 plt.clf()
 
             if done:

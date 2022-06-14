@@ -1,5 +1,5 @@
-from DQN_Classical import DQN
-from DQN_Q import *
+from .DQN_Classical import DQN
+from .DQN_Q import *
 from torch import nn
 import random
 import torch

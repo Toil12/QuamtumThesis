@@ -8,6 +8,6 @@
         "explore_step" : 1000000,
         "batch_size":  32,
         "train_start":  100,
-        "update_target":  1000
+        "update_target":  100
   }
 }

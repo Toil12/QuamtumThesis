@@ -1,5 +1,5 @@
 import json
-f=open("../Conifg/setting.json")
+f=open("Conifg/setting.json")
 def read_parameters(set_name:str='train'):
     data=json.load(f)
     f.close()
