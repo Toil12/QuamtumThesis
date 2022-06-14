@@ -34,11 +34,17 @@ class CNN_Compress(nn.Module):
 
 
 class DQN_Q(nn.Module):
-    def __init__(self,a_size=3, n_layers=1, w_input=False, w_output=False, data_reupload: bool = True):
+    def __init__(self,a_size=3,
+                 n_layers=1,
+                 w_input=False,
+                 w_output=False,
+                 data_reupload: bool = True,
+                 device_name:str="default.qubit"):
         super(DQN_Q, self).__init__()
         self.n_qubits = 4
         self.n_layer=1
         self.q_layers=self.q_layer(self.n_layer,False)
+        self.q_device=device_name
 
         if w_input:
             self.w_input = Parameter(torch.Tensor(self.n_qubits))
@@ -95,8 +101,8 @@ class DQN_Q(nn.Module):
 
 
     def q_layer(self,n_layers, data_reupload):
-        # dev = qml.device("lightning.qubit", wires=self.n_qubits)
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = qml.device("lightning.qubit", wires=self.n_qubits)
+        # dev = qml.device("default.qubit", wires=self.n_qubits)
 
         weight_shapes = {"y_weights": (self.n_layer,self.n_qubits),
                          "z_weights": (self.n_layer,self.n_qubits)

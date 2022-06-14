@@ -8,6 +8,7 @@ from copy import deepcopy
 from skimage.transform import resize
 from skimage.color import rgb2gray
 from Model.DQN_Agent import DQNAgent
+from Train.read_write_operations import ProjectIO
 import time
 import matplotlib.pyplot as plt
 
@@ -36,7 +37,8 @@ if __name__ == "__main__":
     HEIGHT = 84
     WIDTH = 84
     HISTORY_SIZE = 4
-    # render_mode='humam'
+    #
+    render_mode='humam'
     render_mode=None
     if render_mode != None:
         env = gym.make('Breakout-v4', render_mode=render_mode)
@@ -49,11 +51,18 @@ if __name__ == "__main__":
     # action_size = env.action_space.n
     action_size = 3
     scores, episodes = [], []
-    agent = DQNAgent(action_size,"q")
+    io_obj=ProjectIO()
+    io_obj.write_log("start")
+    config_name="train_lightning"
+    agent = DQNAgent(action_size=action_size,
+                     io_obj=io_obj,
+                     config_name=config_name,
+                     strategy="q")
     recent_reward = deque(maxlen=100)
     frame = 0
     memory_size = 0
     for e in range(EPISODES):
+
         done = False
         score = 0
         # initialize the input history
@@ -105,22 +114,28 @@ if __name__ == "__main__":
             # shift one step at tail
             history[:4, :, :] = history[1:, :, :]
             time_end=time.time()
-            if frame % 100 == 0:
-                print('now time : ', datetime.now())
+            if frame % 500 == 0:
+
+                # print('now time : ', datetime.now())
                 scores.append(score)
                 episodes.append(int(e))
                 # print(episodes,scores)
                 plt.plot(episodes,scores)
-                plt.savefig("Graphs/breakout_dqn_q.png")
+                plt.savefig("Results/breakout_dqn_q.png")
                 plt.clf()
 
-            if done:
+            if done and frame>=agent.train_start:
                 recent_reward.append(score)
                 # every episode, plot the play time
                 print("episode:", e, "  score:", score, "  memory length:",
                       len(agent.memory), "  epsilon:", agent.epsilon, "   steps:", step,
                       "    recent reward:", np.mean(recent_reward),
                       "    time consume:",time_end-time_start)
+                # write into log fiel
+
+                log=f"episode:{e}, score:{score}, memory length:{len(agent.memory)}, epsilon:{agent.epsilon}, " \
+                    f"steps:{step}, recent reward:{np.mean(recent_reward)}, time consume:{time_end-time_start}"
+                io_obj.write_log(log)
 
                 # if the mean of scores of last 10 episode is bigger than 400
                 # stop training

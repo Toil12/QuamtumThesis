@@ -8,13 +8,16 @@ from collections import deque
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
-from Train.read_write_operations import *
+from Train.read_write_operations import ProjectIO
 np.set_printoptions(threshold=np.inf)
 
 # it uses Neural Network to approximate q function
 # and replay memory & target q network
 class DQNAgent():
-    def __init__(self, action_size:int,strategy:str='c'):
+    def __init__(self, action_size:int,
+                 io_obj:ProjectIO,
+                 config_name:str,
+                 strategy:str='c',):
         # if you want to see Cartpole learning, then change to True
         self.render = False
         self.load_model = False
@@ -23,7 +26,8 @@ class DQNAgent():
         self.action_size = action_size
 
         # read parameters from json file
-        parameters=read_parameters()
+        # parameters=read_parameters("train_lightning")
+        parameters=io_obj.read_parameters(config_name)
 
         # These are hyper parameters for the DQN
         self.history_size=4
