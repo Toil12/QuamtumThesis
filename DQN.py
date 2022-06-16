@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # render_mode='humam'
     render_mode = None
     model_type="q"
-    config_name="train_qtest"
+    config_name="train_lightning"
     #
     if render_mode != None:
         env = gym.make('Breakout-v4', render_mode=render_mode)
