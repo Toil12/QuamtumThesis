@@ -60,8 +60,13 @@ class DQNAgent():
                          data_reupload=False,
                          device_name=self.q_device,
                          encode_mode=self.encode_mode)
-            self.model = nn.Sequential(CNN_Compress(),q_part)
-            self.target_model = nn.Sequential(CNN_Compress(),q_part)
+            cnn_outfeature=0
+            if self.encode_mode==0:
+                cnn_outfeature=4
+            elif self.encode_mode==1:
+                cnn_outfeature=8
+            self.model = nn.Sequential(CNN_Compress(cnn_outfeature),q_part)
+            self.target_model = nn.Sequential(CNN_Compress(cnn_outfeature),q_part)
 
         self.model.cpu()
         self.model.apply(self.weights_init)
