@@ -33,13 +33,18 @@ def get_init_state(history, s):
         history[i, :, :] = pre_proc(s)
 
 if __name__ == "__main__":
+
+
     EPISODES = 500000
     HEIGHT = 84
     WIDTH = 84
     HISTORY_SIZE = 4
+    # input parameters
+    # render_mode='humam'
+    render_mode = None
+    model_type="q"
+    config_name="train_qtest"
     #
-    render_mode='humam'
-    render_mode=None
     if render_mode != None:
         env = gym.make('Breakout-v4', render_mode=render_mode)
     else:
@@ -51,9 +56,7 @@ if __name__ == "__main__":
     # action_size = env.action_space.n
     action_size = 3
     scores, episodes = [], []
-    io_obj=ProjectIO()
-    io_obj.write_log("start")
-    config_name="train_lightning"
+    io_obj=ProjectIO(model_type=model_type)
     agent = DQNAgent(action_size=action_size,
                      io_obj=io_obj,
                      config_name=config_name,
@@ -62,7 +65,6 @@ if __name__ == "__main__":
     frame = 0
     memory_size = 0
     for e in range(EPISODES):
-
         done = False
         score = 0
         # initialize the input history
@@ -82,17 +84,13 @@ if __name__ == "__main__":
 
         time_start = time.time()
         while not done:
-
             step += 1
             frame += 1
             if agent.render:
                 env.render()
-
             # get action for the current state and go one step in environment
             action = agent.get_action(np.float64(history[:4, :, :]) / 255.)
-
             next_state, reward, done, info = env.step(action + 1)
-
             #
             pre_proc_next_state = pre_proc(next_state)
             history[4, :, :] = pre_proc_next_state
@@ -121,7 +119,7 @@ if __name__ == "__main__":
                 episodes.append(int(e))
                 # print(episodes,scores)
                 plt.plot(episodes,scores)
-                plt.savefig("Results/breakout_dqn_q.png")
+                plt.savefig(f"Results/{io_obj.image_name}")
                 plt.clf()
 
             if done and frame>=agent.train_start:
@@ -140,5 +138,5 @@ if __name__ == "__main__":
                 # if the mean of scores of last 10 episode is bigger than 400
                 # stop training
                 if np.mean(recent_reward) > 50:
-                    torch.save(agent.model, "./SavedModels/breakout_dqn")
+                    torch.save(agent.model, f"SavedModels/{io_obj.model_name}")
                     sys.exit()

@@ -41,6 +41,8 @@ class DQNAgent():
         self.batch_size = parameters['batch_size']
         self.train_start = parameters['train_start']
         self.update_target = parameters['update_target']
+        self.q_device=parameters['device_name']
+        self.encode_mode=parameters['encode_mode']
 
         # create replay memory using deque
         self.memory = deque(maxlen=self.memory_size)
@@ -51,8 +53,15 @@ class DQNAgent():
             self.model = DQN(action_size)
             self.target_model = DQN(action_size)
         elif strategy=="q":
-            self.model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
-            self.target_model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
+            q_part=DQN_Q(a_size=3,
+                         n_layers=1,
+                         w_input=False,
+                         w_output=False,
+                         data_reupload=False,
+                         device_name=self.q_device,
+                         encode_mode=self.encode_mode)
+            self.model = nn.Sequential(CNN_Compress(),q_part)
+            self.target_model = nn.Sequential(CNN_Compress(),q_part)
 
         self.model.cpu()
         self.model.apply(self.weights_init)

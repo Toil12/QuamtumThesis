@@ -1,5 +1,5 @@
 {
-      "train_simple": {
+      "train_test": {
             "discount_factor": 0.99,
             "learning_rate": 0.0001,
             "memory_size": 1000000,
@@ -7,10 +7,12 @@
             "epsilon_min" : 0.02,
             "explore_step" : 1000000,
             "batch_size":  32,
-            "train_start":  10000,
-            "update_target":  1000
+            "train_start":  100,
+            "update_target":  100,
+            "device_name": null,
+            "encode_mode": 0
         },
-      "train_default": {
+      "train_qtest": {
             "discount_factor": 0.99,
             "learning_rate": 0.0001,
             "memory_size": 1000000,
@@ -18,8 +20,10 @@
             "epsilon_min" : 0.02,
             "explore_step" : 1000000,
             "batch_size":  32,
-            "train_start":  10000,
-            "update_target":  1000
+            "train_start":  100,
+            "update_target":  100,
+            "device_name": "lightning.qubit",
+            "encode_mode": 0
         },
       "train_lightning": {
             "discount_factor": 0.99,
@@ -30,6 +34,21 @@
             "explore_step" : 1000000,
             "batch_size":  32,
             "train_start":  10000,
-            "update_target":  1000
+            "update_target":  1000,
+            "device_name": "lightning.qubit",
+            "encode_mode": 0
+      },
+       "train_lightning_dense": {
+            "discount_factor": 0.99,
+            "learning_rate": 0.0001,
+            "memory_size": 1000000,
+            "epsilon":  1.0,
+            "epsilon_min" : 0.02,
+            "explore_step" : 1000000,
+            "batch_size":  32,
+            "train_start":  10000,
+            "update_target":  1000,
+            "device_name": "lightning.qubit",
+            "encode_mode": 1
       }
 }
