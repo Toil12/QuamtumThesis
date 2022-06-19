@@ -3,7 +3,6 @@ import gym
 import torch
 import numpy as np
 from collections import deque
-from datetime import datetime
 from copy import deepcopy
 from skimage.transform import resize
 from skimage.color import rgb2gray
@@ -11,6 +10,7 @@ from Model.DQN_Agent import DQNAgent
 from Train.read_write_operations import ProjectIO
 import time
 import matplotlib.pyplot as plt
+import sys,getopt
 
 torch.cuda.empty_cache()
 def find_max_lifes(env):
@@ -32,18 +32,49 @@ def get_init_state(history, s):
     for i in range(HISTORY_SIZE):
         history[i, :, :] = pre_proc(s)
 
+def get_input_parameters():
+    model_type = None
+    config_name = None
+    encode_mode = None
+    argv = sys.argv[1:]
+
+    try:
+        opts, args = getopt.getopt(argv, "m:c:e:", ["model=", "config=", "encode="])  # 短选项模式
+    except:
+        print("Error")
+
+    for opt, arg in opts:
+        if opt in ['--model']:
+            model_type = arg
+        elif opt in ['--config']:
+            config_name = arg
+        elif opt in ['--encode']:
+            encode_mode = arg
+
+    return [model_type,config_name,encode_mode]
+
+
+
 if __name__ == "__main__":
-
-
     EPISODES = 500000
     HEIGHT = 84
     WIDTH = 84
     HISTORY_SIZE = 4
+    #
+    input_list=get_input_parameters()
+    print(input_list)
+    model_type = input_list[0]
+    config_name = input_list[1]
+    encode_mode = input_list[2]
+    render_mode = None
     # input parameters
     # render_mode='humam'
-    render_mode = None
-    model_type="c"
-    config_name="train_lightning"
+    #
+
+    io_obj = ProjectIO(model_type=model_type,
+                       encod_mode=encode_mode)
+    image_title=io_obj.image_title
+    # title = get_image_title(model_type, io_obj.encode_mode_dict[encode_mode])
     #
     if render_mode != None:
         env = gym.make('Breakout-v4', render_mode=render_mode)
@@ -56,14 +87,14 @@ if __name__ == "__main__":
     # action_size = env.action_space.n
     action_size = 3
     scores, episodes = [], []
-    io_obj=ProjectIO(model_type=model_type)
+
     agent = DQNAgent(action_size=action_size,
                      io_obj=io_obj,
                      config_name=config_name,
-                     strategy=model_type)
+                     strategy=model_type,
+                     encode_mode=io_obj.encode_mode)
     recent_reward = deque(maxlen=100)
     frame = 0
-    memory_size = 0
     for e in range(EPISODES):
         done = False
         score = 0
@@ -112,6 +143,7 @@ if __name__ == "__main__":
             # shift one step at tail
             history[:4, :, :] = history[1:, :, :]
             time_end=time.time()
+            # plot intermediate result
             if frame % 500 == 0:
 
                 # print('now time : ', datetime.now())
@@ -119,7 +151,11 @@ if __name__ == "__main__":
                 episodes.append(int(e))
                 # print(episodes,scores)
                 plt.plot(episodes,scores)
-                plt.savefig(f"Results/{io_obj.image_name}")
+                # plt.title(f"{image_title}")
+                plt.xlabel("Episodes")
+                plt.ylabel("Scores")
+                plt.savefig(f"Results/Images/{io_obj.image_name}")
+
                 plt.clf()
 
             if done and frame>=agent.train_start:
@@ -131,12 +167,12 @@ if __name__ == "__main__":
                       "    time consume:",time_end-time_start)
                 # write into log fiel
 
-                log=f"episode:{e}, score:{score}, memory length:{len(agent.memory)}, epsilon:{agent.epsilon}, " \
-                    f"steps:{step}, recent reward:{np.mean(recent_reward)}, time consume:{time_end-time_start}"
+                log=f"episode:{e},score:{score},memory length:{len(agent.memory)},epsilon:{agent.epsilon}," \
+                    f"steps:{step},recent reward:{np.mean(recent_reward)},time consume:{time_end-time_start}"
                 io_obj.write_log(log)
 
                 # if the mean of scores of last 10 episode is bigger than 400
                 # stop training
                 if np.mean(recent_reward) > 50:
-                    torch.save(agent.model, f"SavedModels/{io_obj.model_name}")
+                    torch.save(agent.model, f"SaveModels/{io_obj.model_name}")
                     sys.exit()

@@ -44,6 +44,7 @@ class DQN_Q(nn.Module):
         self.n_layer=n_layers
         self.q_device = device_name
         self.encode_mode = encode_mode
+        print(self.encode_mode)
         self.reupload = data_reupload
 
         self.q_layers=self.q_layer(self.n_layer,data_reupload)
