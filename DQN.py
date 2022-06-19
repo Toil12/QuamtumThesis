@@ -133,12 +133,12 @@ if __name__ == "__main__":
             agent.append_sample(deepcopy(pre_proc_next_state), action, r, ter)
             # every time step do the training and train until have enough samples
             if frame >= agent.train_start:
-                print("start one train at frame ", frame)
-                # if not start_train_tag:
-                #     print("start one train at frame ",frame)
-                #     start_train_tag=True
-                # else:
-                #     pass
+                # print("start one train at frame ", frame)
+                if not start_train_tag:
+                    print("start one train at frame ",frame)
+                    start_train_tag=True
+                else:
+                    pass
                 agent.train_model(frame)
                 # print("check")
                 if frame % agent.update_target == 0:
