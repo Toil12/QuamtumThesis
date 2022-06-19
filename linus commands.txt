@@ -1,0 +1,20 @@
+ps -aux | grep python
+
+nohup python3 DQN.py > myOutput.txt
+
+cd ~/QuamtumThesis/SystemTest
+
+--model q --config train_lightning --encode dense_a
+
+########################################
+Dense angle encoding:
+nohup python -u DQN.py --model q --config train_lightning --encode dense_a >~/QuamtumThesis/Results/Traceback/dense_a.txt &
+
+Simple angle encoding
+nohup python -u DQN.py --model q --config train_lightning --encode normal_a >~/QuamtumThesis/Results/Traceback/normal_a.txt &
+
+CNN extraction
+nohup python -u DQN.py --model c --config train_lightning --encode normal_a >~/QuamtumThesis/Results/Traceback/classical.txt &
+
+
+

@@ -39,7 +39,7 @@ def get_input_parameters():
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, "m:c:e:", ["model=", "config=", "encode="])  # 短选项模式
+        opts, args = getopt.getopt(argv, "m:c:e:", ["model=", "config=", "encode="])
     except:
         print("Error")
 
