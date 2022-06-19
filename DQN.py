@@ -53,8 +53,6 @@ def get_input_parameters():
 
     return [model_type,config_name,encode_mode]
 
-
-
 if __name__ == "__main__":
     EPISODES = 500000
     HEIGHT = 84
@@ -95,6 +93,7 @@ if __name__ == "__main__":
                      encode_mode=io_obj.encode_mode)
     recent_reward = deque(maxlen=100)
     frame = 0
+    start_train_tag=False
     for e in range(EPISODES):
         done = False
         score = 0
@@ -134,7 +133,12 @@ if __name__ == "__main__":
             agent.append_sample(deepcopy(pre_proc_next_state), action, r, ter)
             # every time step do the training and train until have enough samples
             if frame >= agent.train_start:
-                print("start one train at frame ",frame)
+                print("start one train at frame ", frame)
+                # if not start_train_tag:
+                #     print("start one train at frame ",frame)
+                #     start_train_tag=True
+                # else:
+                #     pass
                 agent.train_model(frame)
                 # print("check")
                 if frame % agent.update_target == 0:
@@ -145,7 +149,6 @@ if __name__ == "__main__":
             time_end=time.time()
             # plot intermediate result
             if frame % 500 == 0:
-
                 # print('now time : ', datetime.now())
                 scores.append(score)
                 episodes.append(int(e))
@@ -155,7 +158,6 @@ if __name__ == "__main__":
                 plt.xlabel("Episodes")
                 plt.ylabel("Scores")
                 plt.savefig(f"Results/Images/{io_obj.image_name}")
-
                 plt.clf()
 
             if done and frame>=agent.train_start:
@@ -165,10 +167,12 @@ if __name__ == "__main__":
                       len(agent.memory), "  epsilon:", agent.epsilon, "   steps:", step,
                       "    recent reward:", np.mean(recent_reward),
                       "    time consume:",time_end-time_start)
+                print("consumed frames ",frame)
                 # write into log fiel
 
                 log=f"episode:{e},score:{score},memory length:{len(agent.memory)},epsilon:{agent.epsilon}," \
-                    f"steps:{step},recent reward:{np.mean(recent_reward)},time consume:{time_end-time_start}"
+                    f"steps:{step},recent reward:{np.mean(recent_reward)},time consume:{time_end-time_start}," \
+                    f"frames:{frame}"
                 io_obj.write_log(log)
 
                 # if the mean of scores of last 10 episode is bigger than 400
