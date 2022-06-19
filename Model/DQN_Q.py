@@ -47,9 +47,7 @@ class DQN_Q(nn.Module):
         self.reupload = data_reupload
 
         self.q_layers=self.q_layer(self.n_layer,data_reupload)
-
-
-        print(f"Encode mode is {self.encode_mode},device is{self.q_device}")
+        print(f"Encode mode is {self.encode_mode},device is {self.q_device}")
 
         if w_input:
             self.w_input = Parameter(torch.Tensor(self.n_qubits))

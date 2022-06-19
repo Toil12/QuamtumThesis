@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # input parameters
     # render_mode='humam'
     render_mode = None
-    model_type="q"
+    model_type="c"
     config_name="train_lightning"
     #
     if render_mode != None:
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     agent = DQNAgent(action_size=action_size,
                      io_obj=io_obj,
                      config_name=config_name,
-                     strategy="q")
+                     strategy=model_type)
     recent_reward = deque(maxlen=100)
     frame = 0
     memory_size = 0
