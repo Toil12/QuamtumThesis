@@ -65,7 +65,6 @@ class DQN_Q(nn.Module):
         if self.w_input is not None:
             inputs = inputs * self.w_input
         inputs = torch.atan(inputs)
-        # bug place
         outputs = self.q_layers(inputs)
         outputs = (1 + outputs) / 2
         if self.w_output is not None:
@@ -73,8 +72,6 @@ class DQN_Q(nn.Module):
         else:
             outputs = 90 * outputs
         return outputs
-        # outputs = self.q_layers(inputs)
-        # return outputs
 
     def encode(self, inputs):
         # print(inputs)
@@ -103,8 +100,6 @@ class DQN_Q(nn.Module):
         return [qml.expval(qml.PauliZ(wire)) for wire in range(1,self.n_qubits)]
 
     def q_layer(self,n_layers, data_reupload):
-        # dev = qml.device("lightning.qubit", wires=self.n_qubits)
-        # dev = qml.device("default.qubit", wires=self.n_qubits)
         dev=qml.device(self.q_device,wires=self.n_qubits)
         weight_shapes = {"y_weights": (self.n_layer,self.n_qubits),
                          "z_weights": (self.n_layer,self.n_qubits)
@@ -120,21 +115,12 @@ class DQN_Q(nn.Module):
                     elif self.encode_mode==1:
                         self.encode_dense(inputs)
                 self.layer(y_weights[layer_idx], z_weights[layer_idx])
-            # print(self.measure())
             return self.measure()
 
-        # @qml.qnode(dev,interface='torch')
-        # def qnode(inputs, weights_0, weight_1):
-        #     self.encode(inputs)
-        #     qml.RX(0, wires=0)
-        #     qml.RX(0, wires=1)
-        #     qml.RX(0, wires=2)
-        #     qml.RX(0, wires=3)
-        #     return self.measure()\
-        if self.encode_mode==0:
-            print(qml.draw(circuit)([0.1,0.2,0.3,0.4],[[1,2,3,4]],[[1,2,3,4]]))
-        elif self.encode_mode==1:
-            print(qml.draw(circuit)([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],[[1,2,3,4,]],[[1,2,3,4]]))
+        # if self.encode_mode==0:
+        #     print(qml.draw(circuit)([0.1,0.2,0.3,0.4],[[1,2,3,4]],[[1,2,3,4]]))
+        # elif self.encode_mode==1:
+        #     print(qml.draw(circuit)([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],[[1,2,3,4,]],[[1,2,3,4]]))
         q_layers = qml.qnn.TorchLayer(circuit, weight_shapes)
         return q_layers
 

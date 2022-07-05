@@ -70,7 +70,8 @@ if __name__ == "__main__":
     #
 
     io_obj = ProjectIO(model_type=model_type,
-                       encod_mode=encode_mode)
+                       encod_mode=encode_mode,
+                       config_name=config_name)
     image_title=io_obj.image_title
     # title = get_image_title(model_type, io_obj.encode_mode_dict[encode_mode])
     #

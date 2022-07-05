@@ -35,7 +35,7 @@ class DQNAgent():
 
         # read parameters from json file
         # parameters=read_parameters("train_lightning")
-        parameters=io_obj.read_parameters(config_name)
+        parameters=io_obj.read_parameters()
 
         # These are hyper parameters for the DQN
         self.history_size=4
@@ -51,20 +51,23 @@ class DQNAgent():
         self.update_target = parameters['update_target']
         self.q_device=parameters['device_name']
 
+        self.n_layers=parameters['n_layers']
+        self.re_upload=parameters['re_upload']
+
         # create replay memory using deque
         self.memory = deque(maxlen=self.memory_size)
 
-        # create main model and target model
+        # create main model and target model with different strategy
 
         if strategy=="c":
             self.model = DQN(action_size)
             self.target_model = DQN(action_size)
         elif strategy=="q":
             q_part=DQN_Q(a_size=3,
-                         n_layers=1,
+                         n_layers=self.n_layers,
                          w_input=False,
                          w_output=False,
-                         data_reupload=False,
+                         data_reupload=self.re_upload,
                          device_name=self.q_device,
                          encode_mode=self.encode_mode)
             cnn_outfeature=0
