@@ -11,7 +11,8 @@
             "update_target":  100,
             "device_name": null,
             "n_layers": 1,
-            "re_upload": false
+            "re_upload": false,
+            "diff_method": null
         },
       "train_qbase": {
             "discount_factor": 0.99,
@@ -25,7 +26,8 @@
             "update_target":  100,
             "device_name": "lightning.qubit",
             "n_layers": 1,
-            "re_upload": false
+            "re_upload": false,
+            "diff_method": null
         },
       "train_lightning": {
             "discount_factor": 0.99,
@@ -39,7 +41,8 @@
             "update_target":  1000,
             "device_name": "lightning.qubit",
             "n_layers": 1,
-            "re_upload": false
+            "re_upload": false,
+            "diff_method": null
       },
       "train_n_3": {
             "discount_factor": 0.99,
@@ -53,7 +56,23 @@
             "update_target":  1000,
             "device_name": "lightning.qubit",
             "n_layers": 3,
-            "re_upload": false
+            "re_upload": false,
+            "diff_method": null
+      },
+       "train_n_3": {
+            "discount_factor": 0.99,
+            "learning_rate": 0.0001,
+            "memory_size": 1000000,
+            "epsilon":  1.0,
+            "epsilon_min" : 0.02,
+            "explore_step" : 1000000,
+            "batch_size":  32,
+            "train_start":  10000,
+            "update_target":  1000,
+            "device_name": "lightning.qubit",
+            "n_layers": 3,
+            "re_upload": false,
+            "diff_method": null
       },
       "train_n_5": {
             "discount_factor": 0.99,
@@ -67,6 +86,7 @@
             "update_target":  1000,
             "device_name": "lightning.qubit",
             "n_layers": 5,
-            "re_upload": false
+            "re_upload": false,
+            "diff_method": null
       }
 }

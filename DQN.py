@@ -4,6 +4,8 @@ import torch
 import numpy as np
 from collections import deque
 from copy import deepcopy
+
+from PIL import Image
 from skimage.transform import resize
 from skimage.color import rgb2gray
 from Model.DQN_Agent import DQNAgent
@@ -103,7 +105,7 @@ if __name__ == "__main__":
         step = 0
         d = False
         state = env.reset()
-        # drop the point board
+        # drop the score board
         state = state[21:]
         life = max_life
 

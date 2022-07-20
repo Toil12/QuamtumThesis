@@ -105,7 +105,7 @@ class DQN_Q(nn.Module):
                          "z_weights": (self.n_layer,self.n_qubits)
         }
 
-        @qml.qnode(dev, interface='torch')
+        @qml.qnode(dev, interface='torch',diff_method="parameter-shift")
         def circuit(inputs, y_weights, z_weights):
             for layer_idx in range(n_layers):
                 if (layer_idx == 0) or data_reupload:

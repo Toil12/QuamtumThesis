@@ -198,7 +198,6 @@ class DQNAgent():
         # Q function of next state
         next_states = torch.Tensor(next_states)
         if self.train_device=="gpu":
-
             next_states = Variable(next_states).float().gpu()
             next_pred = self.target_model(next_states).data.gpu()
         else:
