@@ -1,1 +1,1 @@
-f = open("../Graphs/test.txt")
+f = open("../Results/test.txt")

@@ -8,22 +8,34 @@ from collections import deque
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
-from Train.read_write_operations import *
+from Train.read_write_operations import ProjectIO
 np.set_printoptions(threshold=np.inf)
-
 # it uses Neural Network to approximate q function
 # and replay memory & target q network
+
 class DQNAgent():
-    def __init__(self, action_size:int,strategy:str='c'):
+    def __init__(self,
+                 action_size:int,
+                 io_obj:ProjectIO,
+                 config_name:str,
+                 strategy:str='c',
+                 load_model:str="",
+                 encode_mode:str="normal_a"):
         # if you want to see Cartpole learning, then change to True
+        if torch.cuda.is_available():
+            self.train_device = "gpu"
+        else:
+            self.train_device = "cpu"
         self.render = False
         self.load_model = False
+        self.encode_mode=io_obj.encode_mode_dict[encode_mode]
 
         # get size of action
         self.action_size = action_size
 
         # read parameters from json file
-        parameters=read_parameters()
+        # parameters=read_parameters("train_lightning")
+        parameters=io_obj.read_parameters()
 
         # These are hyper parameters for the DQN
         self.history_size=4
@@ -37,22 +49,43 @@ class DQNAgent():
         self.batch_size = parameters['batch_size']
         self.train_start = parameters['train_start']
         self.update_target = parameters['update_target']
+        self.q_device=parameters['device_name']
+
+        self.n_layers=parameters['n_layers']
+        self.re_upload=parameters['re_upload']
 
         # create replay memory using deque
         self.memory = deque(maxlen=self.memory_size)
 
-        # create main model and target model
+        # create main model and target model with different strategy
 
         if strategy=="c":
             self.model = DQN(action_size)
             self.target_model = DQN(action_size)
         elif strategy=="q":
-            self.model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
-            self.target_model = nn.Sequential(CNN_Compress(),DQN_Q(action_size))
+            q_part=DQN_Q(a_size=3,
+                         n_layers=self.n_layers,
+                         w_input=False,
+                         w_output=False,
+                         data_reupload=self.re_upload,
+                         device_name=self.q_device,
+                         encode_mode=self.encode_mode)
+            cnn_outfeature=0
+            if self.encode_mode==0:
+                cnn_outfeature=4
+            elif self.encode_mode==1:
+                cnn_outfeature=8
+            self.model = nn.Sequential(CNN_Compress(cnn_outfeature),q_part)
+            self.target_model = nn.Sequential(CNN_Compress(cnn_outfeature),q_part)
 
-        self.model.cpu()
+        if self.train_device=="gpu":
+            self.model.gpu()
+            self.target_model.gpu()
+        else:
+            self.model.cpu()
+            self.target_model.cpu()
         self.model.apply(self.weights_init)
-        self.target_model.cpu()
+
 
         # self.optimizer = optim.RMSprop(params=self.model.parameters(),lr=self.learning_rate, eps=0.01, momentum=0.95)
         self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)
@@ -60,8 +93,8 @@ class DQNAgent():
         # initialize target model
         self.update_target_model()
 
-        if self.load_model:
-            self.model = torch.load('save_model/breakout_dqn')
+        if load_model!="":
+            self.model = torch.load(f'SaveModels/{load_model}')
 
     # weight xavier initialize
     def weights_init(self, m):
@@ -86,9 +119,12 @@ class DQNAgent():
         else:
 
             state = torch.from_numpy(state).unsqueeze(0)
-            state = Variable(state).float().cpu()
-
-            action = self.model(state).data.cpu().max(1)[1]
+            if self.train_device=="gpu":
+                tate = Variable(state).float().gpu()
+                action = self.model(state).data.gpu().max(1)[1]
+            else:
+                state = Variable(state).float().cpu()
+                action = self.model(state).data.cpu().max(1)[1]
             return int(action)
 
     # save sample <s,a,r,s'> to the replay memory
@@ -139,7 +175,10 @@ class DQNAgent():
 
         # Q function of current state
         states = torch.Tensor(states)
-        states = Variable(states).float().cpu()
+        if self.train_device=="gpu":
+            states = Variable(states).float().gpu()
+        else:
+            states = Variable(states).float().cpu()
 
         pred = self.model(states)
 
@@ -151,19 +190,29 @@ class DQNAgent():
         # quantum output problem
         # print(one_hot_action.shape)
         # print(pred.shape)
-        pred = torch.sum(pred.mul(Variable(one_hot_action).cpu()), dim=1)
+        if self.train_device=="gpu":
+            pred = torch.sum(pred.mul(Variable(one_hot_action).gpu()), dim=1)
+        else:
+            pred = torch.sum(pred.mul(Variable(one_hot_action).cpu()), dim=1)
 
         # Q function of next state
         next_states = torch.Tensor(next_states)
-        next_states = Variable(next_states).float().cpu()
-        next_pred = self.target_model(next_states).data.cpu()
+        if self.train_device=="gpu":
+            next_states = Variable(next_states).float().gpu()
+            next_pred = self.target_model(next_states).data.gpu()
+        else:
+            next_states = Variable(next_states).float().cpu()
+            next_pred = self.target_model(next_states).data.cpu()
 
         rewards = torch.FloatTensor(rewards)
         dones = torch.FloatTensor(dones)
 
         # Q Learning: get maximum Q value at s' from target model
         target = rewards + (1 - dones) * self.discount_factor * next_pred.max(1)[0]
-        target = Variable(target).cpu()
+        if self.train_device=="gpu":
+            target = Variable(target).gpu()
+        else:
+            target = Variable(target).cpu()
 
         self.optimizer.zero_grad()
 

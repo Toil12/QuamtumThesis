@@ -10,9 +10,8 @@ class Flatten(nn.Module):
     def forward(self, input):
         return input.view(input.size(0), -1)
 
-
 class CNN_Compress(nn.Module):
-    def __init__(self):
+    def __init__(self,outfearue:int=4):
         super(CNN_Compress, self).__init__()
         self.fc = nn.Sequential(
             nn.Conv2d(in_channels=4, out_channels=32, kernel_size=8, stride=4),
@@ -24,21 +23,31 @@ class CNN_Compress(nn.Module):
             Flatten(),
             nn.Linear(in_features=7 * 7 * 64, out_features=512),
             nn.ReLU(),
-            nn.Linear(in_features=512, out_features=8)
+            nn.Linear(in_features=512, out_features=outfearue)
         )
 
     def forward(self, x):
         return self.fc(x)
 
-
-
-
 class DQN_Q(nn.Module):
-    def __init__(self,a_size=3, n_layers=1, w_input=False, w_output=False, data_reupload: bool = True):
+    def __init__(self,
+                 a_size=3,
+                 n_layers=1,
+                 w_input=False,
+                 w_output=False,
+                 data_reupload: bool = False,
+                 device_name:str="default.qubit",
+                 encode_mode:int=0):
         super(DQN_Q, self).__init__()
+        self.action_size=a_size
         self.n_qubits = 4
-        self.n_layer=1
-        self.q_layers=self.q_layer(self.n_layer,False)
+        self.n_layer=n_layers
+        self.q_device = device_name
+        self.encode_mode = encode_mode
+        self.reupload = data_reupload
+
+        self.q_layers=self.q_layer(self.n_layer,data_reupload)
+        print(f"Encode mode is {self.encode_mode},device is {self.q_device}")
 
         if w_input:
             self.w_input = Parameter(torch.Tensor(self.n_qubits))
@@ -56,7 +65,6 @@ class DQN_Q(nn.Module):
         if self.w_input is not None:
             inputs = inputs * self.w_input
         inputs = torch.atan(inputs)
-        # bug place
         outputs = self.q_layers(inputs)
         outputs = (1 + outputs) / 2
         if self.w_output is not None:
@@ -64,8 +72,6 @@ class DQN_Q(nn.Module):
         else:
             outputs = 90 * outputs
         return outputs
-        # outputs = self.q_layers(inputs)
-        # return outputs
 
     def encode(self, inputs):
         # print(inputs)
@@ -93,41 +99,28 @@ class DQN_Q(nn.Module):
     def measure(self):
         return [qml.expval(qml.PauliZ(wire)) for wire in range(1,self.n_qubits)]
 
-
     def q_layer(self,n_layers, data_reupload):
-        # dev = qml.device("lightning.qubit", wires=self.n_qubits)
-        dev = qml.device("default.qubit", wires=self.n_qubits)
-
+        dev=qml.device(self.q_device,wires=self.n_qubits)
         weight_shapes = {"y_weights": (self.n_layer,self.n_qubits),
                          "z_weights": (self.n_layer,self.n_qubits)
         }
-        encode_mode=1
 
-        @qml.qnode(dev, interface='torch')
+        @qml.qnode(dev, interface='torch',diff_method="parameter-shift")
         def circuit(inputs, y_weights, z_weights):
             for layer_idx in range(n_layers):
                 if (layer_idx == 0) or data_reupload:
-
-                    if encode_mode==1:
-                        self.encode_dense(inputs)
-                    else:
+                    # different encode mode
+                    if self.encode_mode==0:
                         self.encode(inputs)
+                    elif self.encode_mode==1:
+                        self.encode_dense(inputs)
                 self.layer(y_weights[layer_idx], z_weights[layer_idx])
-            # print(self.measure())
             return self.measure()
 
-        # @qml.qnode(dev,interface='torch')
-        # def qnode(inputs, weights_0, weight_1):
-        #     self.encode(inputs)
-        #     qml.RX(0, wires=0)
-        #     qml.RX(0, wires=1)
-        #     qml.RX(0, wires=2)
-        #     qml.RX(0, wires=3)
-        #     return self.measure()
-        if encode_mode==1:
-            print(qml.draw(circuit)([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],[[1,2,3,4,]],[[1,2,3,4]]))
-        else:
-            print(qml.draw(circuit)([0.1,0.2,0.3,0.4],[[0.1,0.2,0.3,0.4]],[[0.1,0.2,0.3,0.4]]))
+        # if self.encode_mode==0:
+        #     print(qml.draw(circuit)([0.1,0.2,0.3,0.4],[[1,2,3,4]],[[1,2,3,4]]))
+        # elif self.encode_mode==1:
+        #     print(qml.draw(circuit)([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8],[[1,2,3,4,]],[[1,2,3,4]]))
         q_layers = qml.qnn.TorchLayer(circuit, weight_shapes)
         return q_layers
 
