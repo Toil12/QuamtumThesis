@@ -11,11 +11,13 @@ class ProjectIO:
 
         self.name_dict = {
             "normal_a": "Angle",
-            "dense_a": "Dense Angle"
+            "dense_a": "Dense Angle",
+            "new":"New"
         }
         self.encode_mode_dict={
             "normal_a":0,
-            "dense_a":1
+            "dense_a":1,
+            "new":2
         }
 
         time_stamp=time.asctime(time.localtime(time.time()))

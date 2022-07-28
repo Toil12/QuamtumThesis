@@ -56,14 +56,37 @@ def get_input_parameters():
 
     return [model_type,config_name,encode_mode]
 
-@qml.qnode("lightning.qubit", interface='torch',diff_method="parameter-shift")
-def encode(inputs,)
+def encode():
+    n_qubits=3
+    dev=qml.device("lightning.qubit",wires=n_qubits)
+
+    results=[]
+    @qml.qnode(dev,interface='torch',diff_method="parameter-shift")
+    def circuit(inputs):
+        for x in range(inputs.shape[1]):
+            for y in range(inputs.shape[2]):
+                for i in range(4):
+                    color=inputs[i][x][y]
+                    trans_color(color)
+                    if i==3:
+                        trans_position(x,y)
+        return [qml.expval(qml.PauliZ(wire)) for wire in range(n_qubits)]
+    return circuit
+
+def trans_color(color):
+    qml.RX(color/(255*np.pi),2)
+
+def trans_position(x,y):
+    qml.RY(x / (2*np.pi),wires=0)
+    qml.CNOT(wires=[0,2])
+    qml.RZ(y / (2*np.pi),wires=1)
+    qml.CNOT(wires=[1,2])
 
 
 if __name__ == '__main__':
     EPISODES = 500000
-    HEIGHT = 84
-    WIDTH = 84
+    HEIGHT = 3
+    WIDTH = 3
     HISTORY_SIZE = 4
     env = gym.make('Breakout-v4')
     # get the game max lifes
@@ -76,21 +99,29 @@ if __name__ == '__main__':
     recent_reward = deque(maxlen=100)
     frame = 0
     start_train_tag = False
+    for e in range(4):
+        done = False
+        score = 0
+        # initialize the input history
+        history = np.zeros([5, HEIGHT, WIDTH], dtype=np.uint8)
+        step = 0
+        d = False
+        state = env.reset()
+        # drop the score board
+        state = state[21:]
+        life = max_life
 
-    done = False
-    score = 0
-    # initialize the input history
-    history = np.zeros([5, HEIGHT, WIDTH], dtype=np.uint8)
-    step = 0
-    d = False
-    state = env.reset()
-    # drop the score board
-    state = state[21:]
-    life = max_life
+        # compress the original frame
+        get_init_state(history, state)
+        print(history.shape)
+        # show the state
+        # im=Image.fromarray(history[0])
+        # im.show()
 
-    # compress the original frame
-    get_init_state(history, state)
-    print(history.shape)
-    # show the state
-    # im=Image.fromarray(history[0])
-    # im.show()
+        k=encode()
+        start=time.time()
+        r=k(history)
+        end=time.time()
+        print(end-start)
+        print(r.shape)
+        print(r)

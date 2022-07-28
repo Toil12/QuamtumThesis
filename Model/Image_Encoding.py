@@ -2,6 +2,7 @@ import pennylane as qml
 from math import pi
 import torch
 from torch import nn
+import time
 
 class FRQI_Encoding(nn.Module):
     def __init__(self,qubits:int=3,input_pixels:int=4):
@@ -70,7 +71,10 @@ class FRQI_Encoding(nn.Module):
 if __name__ == '__main__':
     input=torch.randint(0,255,(32,3,3))
     model = torch.nn.Sequential(FRQI_Encoding(qubits=5))
+    start=time.time()
     pred=model(input)
+    end=time.time()
+    print(end-start,"s")
     print(pred)
 
     # print(input)

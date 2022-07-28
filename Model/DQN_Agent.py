@@ -73,10 +73,17 @@ class DQNAgent():
             cnn_outfeature=0
             if self.encode_mode==0:
                 cnn_outfeature=4
+                self.model = nn.Sequential(CNN_Compress(cnn_outfeature), q_part)
+                self.target_model = nn.Sequential(CNN_Compress(cnn_outfeature), q_part)
+
             elif self.encode_mode==1:
                 cnn_outfeature=8
-            self.model = nn.Sequential(CNN_Compress(cnn_outfeature),q_part)
-            self.target_model = nn.Sequential(CNN_Compress(cnn_outfeature),q_part)
+                self.model = nn.Sequential(CNN_Compress(cnn_outfeature), q_part)
+                self.target_model = nn.Sequential(CNN_Compress(cnn_outfeature), q_part)
+
+            elif self.encode_mode==2:
+                self.model = nn.Sequential(q_part)
+                self.target_model = nn.Sequential(q_part)
 
         if self.train_device=="gpu":
             self.model.gpu()
@@ -182,19 +189,17 @@ class DQNAgent():
 
         pred = self.model(states)
 
-        # one-hot encoding
+        # one-hot encoding, actions from number to one-hot
         a = torch.LongTensor(actions).view(-1, 1)
-
         one_hot_action = torch.FloatTensor(self.batch_size, self.action_size).zero_()
         one_hot_action.scatter_(1, a, 1)
         # quantum output problem
-        # print(one_hot_action.shape)
-        # print(pred.shape)
+        # print(pred)
         if self.train_device=="gpu":
             pred = torch.sum(pred.mul(Variable(one_hot_action).gpu()), dim=1)
         else:
             pred = torch.sum(pred.mul(Variable(one_hot_action).cpu()), dim=1)
-
+        # print(pred)
         # Q function of next state
         next_states = torch.Tensor(next_states)
         if self.train_device=="gpu":
